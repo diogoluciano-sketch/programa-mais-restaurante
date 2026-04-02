@@ -5,7 +5,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Check, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 
-const RsvpSection = () => {
+interface RsvpSectionProps {
+  onConfirm?: () => void;
+  onCancel?: () => void;
+}
+
+const RsvpSection = ({ onConfirm, onCancel }: RsvpSectionProps) => {
   const [name, setName] = useState("");
   const [confirmed, setConfirmed] = useState(false);
 
@@ -15,6 +20,7 @@ const RsvpSection = () => {
       return;
     }
     setConfirmed(true);
+    onConfirm?.();
     toast.success(`Presença confirmada para ${name.trim()}!`);
   };
 
@@ -38,6 +44,7 @@ const RsvpSection = () => {
             onClick={() => {
               setConfirmed(false);
               setName("");
+              onCancel?.();
             }}
           >
             Cancelar confirmação
