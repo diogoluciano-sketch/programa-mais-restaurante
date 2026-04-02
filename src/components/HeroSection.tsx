@@ -25,9 +25,9 @@ const HeroSection = () => {
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="mb-2">
           <img 
-            src="https://programaleiloes.com/modules/site/images/programa-leiloes-fundo.jpg" 
+            src="https://drive.google.com/uc?export=view&id=1y4DVWygWgn4i0QJs4puYzaSDxkhrSGCB" 
             alt="Programa Leilões" 
-            className="h-16 md:h-20 mx-auto object-contain rounded-lg shadow-sm" 
+            className="h-16 md:h-20 mx-auto object-contain" 
           />
         </div>
         <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground tracking-tight">
