@@ -77,7 +77,7 @@ const RsvpSection = ({ onConfirm, onCancel, isAlreadyConfirmed, initialName }: R
           Confirmar Presença
         </h3>
         <p className="text-muted-foreground text-sm text-center">
-          Insira seu nome para confirmar o almoço de hoje
+          Confira seu nome e confirme o seu almoço de hoje
         </p>
         <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
           <Input
