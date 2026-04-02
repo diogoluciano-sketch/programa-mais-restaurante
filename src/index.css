@@ -38,7 +38,7 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    --hero-gradient: linear-gradient(135deg, hsl(0 0% 18%), hsl(0 0% 12%));
+    --hero-gradient: linear-gradient(135deg, hsl(359 70% 38%), hsl(359 75% 25%));
     --card-shadow: 0 4px 24px -4px hsl(0 0% 0% / 0.08);
 
     --sidebar-background: 0 0% 98%;

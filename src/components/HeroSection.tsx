@@ -1,6 +1,9 @@
-import { UtensilsCrossed } from "lucide-react";
+import { UtensilsCrossed, Shield } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
 
 const HeroSection = () => {
+  const { user } = useAuth();
   const today = new Date();
   const formattedDate = today.toLocaleDateString("pt-BR", {
     weekday: "long",
@@ -11,12 +14,21 @@ const HeroSection = () => {
 
   return (
     <section
-      className="w-full py-16 px-4 text-center"
+      className="relative w-full py-16 px-4 text-center overflow-hidden"
       style={{ background: "var(--hero-gradient)" }}
     >
-      <div className="max-w-2xl mx-auto space-y-4">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 mb-2">
-          <UtensilsCrossed className="w-8 h-8 text-primary" />
+      {user?.email === "diogo.luciano@programaleiloes.com" && (
+        <Link to="/admin" className="absolute top-4 right-4 p-2 opacity-10 hover:opacity-100 transition-opacity text-primary-foreground">
+          <Shield className="w-5 h-5" />
+        </Link>
+      )}
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="mb-2">
+          <img 
+            src="https://programaleiloes.com/modules/site/images/programa-leiloes-fundo.jpg" 
+            alt="Programa Leilões" 
+            className="h-16 md:h-20 mx-auto object-contain rounded-lg shadow-sm" 
+          />
         </div>
         <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground tracking-tight">
           Restaurante Corporativo

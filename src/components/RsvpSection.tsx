@@ -1,18 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check, UserCheck } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface RsvpSectionProps {
-  onConfirm?: () => void;
+  onConfirm?: (name: string) => void;
   onCancel?: () => void;
+  isAlreadyConfirmed?: boolean;
+  initialName?: string;
 }
 
-const RsvpSection = ({ onConfirm, onCancel }: RsvpSectionProps) => {
-  const [name, setName] = useState("");
+const RsvpSection = ({ onConfirm, onCancel, isAlreadyConfirmed, initialName }: RsvpSectionProps) => {
+  const { user } = useAuth();
+  const defaultName = initialName || user?.displayName || user?.email?.split('@')[0] || "";
+  const [name, setName] = useState(defaultName);
   const [confirmed, setConfirmed] = useState(false);
+
+  useEffect(() => {
+    if (isAlreadyConfirmed !== undefined) {
+      setConfirmed(isAlreadyConfirmed);
+    }
+  }, [isAlreadyConfirmed]);
+
+  useEffect(() => {
+    if (user && !name) {
+      setName(defaultName);
+    }
+  }, [user]);
 
   const handleConfirm = () => {
     if (!name.trim()) {
@@ -20,7 +37,7 @@ const RsvpSection = ({ onConfirm, onCancel }: RsvpSectionProps) => {
       return;
     }
     setConfirmed(true);
-    onConfirm?.();
+    onConfirm?.(name.trim());
     toast.success(`Presença confirmada para ${name.trim()}!`);
   };
 
@@ -43,7 +60,6 @@ const RsvpSection = ({ onConfirm, onCancel }: RsvpSectionProps) => {
             className="mt-2 text-muted-foreground"
             onClick={() => {
               setConfirmed(false);
-              setName("");
               onCancel?.();
             }}
           >
