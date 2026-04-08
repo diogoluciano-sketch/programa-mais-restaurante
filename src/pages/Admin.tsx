@@ -160,8 +160,7 @@ const Admin = () => {
     try {
       const dataToExport = filteredSurveys.map(s => ({
         "Data": s.date ? format(new Date(s.date + "T12:00:00"), "dd/MM/yyyy") : "N/A",
-        "Usuário": s.userName || "Anônimo",
-        "E-mail": s.userEmail || "N/A",
+        "Usuário": "Anônimo",
         "Nota Geral": s.overallScore,
         "Variedade": s.ratings?.["variedade"] || "-",
         "Sabor": s.ratings?.["sabor"] || "-",
@@ -282,8 +281,8 @@ const Admin = () => {
                   <div key={s.id} className="p-6 space-y-4 hover:bg-muted/5 transition-colors">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        <div className="bg-primary/10 p-1.5 rounded-full"><User className="w-4 h-4 text-primary" /></div>
-                        <span className="font-bold text-sm">{s.userName || "Anônimo"}</span>
+                        <div className="bg-primary/10 p-1.5 rounded-full"><Users className="w-4 h-4 text-primary" /></div>
+                        <span className="font-bold text-sm">Colaborador Anônimo</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 px-3 py-1 rounded-full">
                         <Calendar className="w-3.5 h-3.5" />

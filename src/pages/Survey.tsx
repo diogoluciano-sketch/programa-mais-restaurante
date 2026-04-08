@@ -84,8 +84,6 @@ const Survey = () => {
     try {
       await addDoc(collection(db, "satisfaction"), {
         userId: user?.uid,
-        userEmail: user?.email,
-        userName: user?.displayName,
         ratings,
         overallScore: parseInt(overallScore) || 0,
         comment: comment.trim(),
