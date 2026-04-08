@@ -12,24 +12,30 @@ Este plano detalha a implementação do cardápio dinâmico via upload de planil
 
 ## 🛠️ Fases
 
-### Fase 1: Autenticação (Firebase Google Auth)
+### Fase 1: Autenticação (Firebase Google Auth) - ✅ CONCLUÍDO
 1.  **Configuração Firebase**: Habilitar Google Provider (confirmar no console Firebase).
 2.  **Auth Component**: `src/components/AuthContainer.tsx`.
 3.  **Auth State Hook**: `src/hooks/useAuth.ts`.
-4.  **UI Content Gate**: Proteger as rotas para exigir login Google antes do RSVP.
+4.  **UI Content Gate**: Proteger as rotas para domínio `@programaleiloes.com`.
 
-### Fase 2: Gestão de Cardápio (Admin & Excel)
+### Fase 2: Gestão de Cardápio (Admin & Excel) - ✅ CONCLUÍDO
 1.  **Admin Page**: `src/pages/Admin.tsx` para o upload da planilha.
-2.  **Excel Parser Service**: Lógica com a biblioteca `xlsx` para processar a estrutura do arquivo `PL - 04 Cardápio PL Abril 2026.xlsx`.
-3.  **Firestore Sync**: Salvar cada dia do cardápio como um documento individual na coleção `menu` indexado pela data.
+2.  **Excel Parser Service**: Lógica com `xlsx`.
+3.  **Firestore Sync**: Persistência na coleção `menu`.
 
-### Fase 3: Exibição Dinâmica (Consumer UI)
-1.  **Menu Service**: Hook `useMenu` para buscar o cardápio do dia.
-2.  **Update MenuCard**: Substituir os dados "mock" por chamadas dinâmicas.
-3.  **Update RSVP**: Preencher automaticamente o campo de nome com o `displayName` do Firebase Auth.
+### Fase 3: Exibição Dinâmica (Consumer UI) - ✅ CONCLUÍDO
+1.  **Menu Service**: Hook `useMenu`.
+2.  **Update MenuCard**: Componentes dinâmicos.
+3.  **Update RSVP**: Preenchimento automático do nome.
+
+### Melhorias & Ajustes:
+- [x] Botão de redirecionamento para Intranet no HeroSection. ✅
+- [x] Mover Pesquisa de Satisfação para página própria (`/pesquisa`). ✅
+- [x] Remover contador público de confirmações (RSVPs). ✅
+- [x] Adicionar Fábio e Priscila como administradores do sistema. ✅
 
 ---
-**Status Atual:** Mapeamento de colunas confirmado. Iniciando Fase 1 (Autenticação Google com restrição de domínio @programaleiloes.com).
+**Status Atual:** Concluído. O sistema agora possui gestão dinâmica de cardápios, pesquisa de satisfação dedicada e administradores múltiplos.
 
 ### 📋 Mapeamento Confirmado (Excel -> Firestore):
 - **Data**: `Unnamed: 0`
