@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ClipboardCheck } from "lucide-react";
 
 const Index = () => {
-  const { isAlreadyConfirmed, addConfirmation, removeConfirmation } = useRSVPs();
+  const { isAlreadyConfirmed, isLocked, addConfirmation, removeConfirmation } = useRSVPs();
 
   const handleConfirm = async (name: string) => {
     try {
@@ -37,6 +37,7 @@ const Index = () => {
             onConfirm={handleConfirm}
             onCancel={handleCancel}
             isAlreadyConfirmed={isAlreadyConfirmed}
+            isLocked={isLocked}
           />
 
           <MenuCard />

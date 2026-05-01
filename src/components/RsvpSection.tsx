@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Check, UserCheck } from "lucide-react";
+import { Check, UserCheck, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -11,9 +11,10 @@ interface RsvpSectionProps {
   onCancel?: () => void;
   isAlreadyConfirmed?: boolean;
   initialName?: string;
+  isLocked?: boolean;
 }
 
-const RsvpSection = ({ onConfirm, onCancel, isAlreadyConfirmed, initialName }: RsvpSectionProps) => {
+const RsvpSection = ({ onConfirm, onCancel, isAlreadyConfirmed, initialName, isLocked }: RsvpSectionProps) => {
   const { user } = useAuth();
   const defaultName = initialName || user?.displayName || user?.email?.split('@')[0] || "";
   const [name, setName] = useState(defaultName);
@@ -34,6 +35,10 @@ const RsvpSection = ({ onConfirm, onCancel, isAlreadyConfirmed, initialName }: R
   const handleConfirm = () => {
     if (!name.trim()) {
       toast.error("Por favor, insira seu nome.");
+      return;
+    }
+    if (isLocked) {
+      toast.error("O período de confirmação é das 07:00 às 10:00.");
       return;
     }
     setConfirmed(true);
@@ -59,11 +64,15 @@ const RsvpSection = ({ onConfirm, onCancel, isAlreadyConfirmed, initialName }: R
             size="sm"
             className="mt-2 text-muted-foreground"
             onClick={() => {
+              if (isLocked) {
+                toast.error("Não é possível alterar confirmações após as 10:00.");
+                return;
+              }
               setConfirmed(false);
               onCancel?.();
             }}
           >
-            Cancelar confirmação
+            {isLocked ? "Confirmação encerrada" : "Cancelar confirmação"}
           </Button>
         </CardContent>
       </Card>
@@ -77,19 +86,22 @@ const RsvpSection = ({ onConfirm, onCancel, isAlreadyConfirmed, initialName }: R
           Confirmar Presença
         </h3>
         <p className="text-muted-foreground text-sm text-center">
-          Confira seu nome e confirme o seu almoço de hoje
+          {isLocked 
+            ? "O período de confirmação para hoje se encerrou (limite 10:00)." 
+            : "Confira seu nome e confirme o seu almoço de hoje"}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
           <Input
             placeholder="Seu nome completo"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
+            onKeyDown={(e) => e.key === "Enter" && !isLocked && handleConfirm()}
+            disabled={isLocked}
             className="flex-1"
           />
-          <Button onClick={handleConfirm} size="lg" className="gap-2">
-            <Check className="w-4 h-4" />
-            Confirmar
+          <Button onClick={handleConfirm} disabled={isLocked} size="lg" className="gap-2">
+            {isLocked ? <Lock className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+            {isLocked ? "Encerrado" : "Confirmar"}
           </Button>
         </div>
       </CardContent>

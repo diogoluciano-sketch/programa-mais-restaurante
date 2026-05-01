@@ -20,7 +20,8 @@ const Admin = () => {
   const [isLoadingSurveys, setIsLoadingSurveys] = useState(true);
   const [todayRSVPs, setTodayRSVPs] = useState<any[]>([]);
   const [isLoadingRSVPs, setIsLoadingRSVPs] = useState(true);
-  const [dateFilter, setDateFilter] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
 
@@ -147,14 +148,50 @@ const Admin = () => {
     reader.readAsArrayBuffer(file);
   };
 
-  const handleDateFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDateFilter(e.target.value);
-  };
 
   const filteredSurveys = surveys.filter(s => {
-    if (!dateFilter) return true;
-    return s.date === dateFilter;
+    if (!startDate && !endDate) return true;
+    if (startDate && !endDate) return s.date >= startDate;
+    if (!startDate && endDate) return s.date <= endDate;
+    return s.date >= startDate && s.date <= endDate;
   });
+
+  const getAverages = (surveysList: any[]) => {
+    if (surveysList.length === 0) return null;
+    
+    const count = surveysList.length;
+    const totals = {
+      overall: 0,
+      variedade: 0,
+      sabor: 0,
+      apresentacao: 0,
+      temperatura: 0,
+      higiene: 0,
+      atendimento: 0
+    };
+
+    surveysList.forEach(s => {
+      totals.overall += s.overallScore || 0;
+      totals.variedade += s.ratings?.variedade || 0;
+      totals.sabor += s.ratings?.sabor || 0;
+      totals.apresentacao += s.ratings?.apresentacao || 0;
+      totals.temperatura += s.ratings?.temperatura || 0;
+      totals.higiene += s.ratings?.higiene || 0;
+      totals.atendimento += s.ratings?.atendimento || 0;
+    });
+
+    return {
+      overall: (totals.overall / count).toFixed(1),
+      variedade: (totals.variedade / count).toFixed(1),
+      sabor: (totals.sabor / count).toFixed(1),
+      apresentacao: (totals.apresentacao / count).toFixed(1),
+      temperatura: (totals.temperatura / count).toFixed(1),
+      higiene: (totals.higiene / count).toFixed(1),
+      atendimento: (totals.atendimento / count).toFixed(1)
+    };
+  };
+
+  const averages = getAverages(filteredSurveys);
 
   const exportSurveysToExcel = () => {
     try {
@@ -175,7 +212,7 @@ const Admin = () => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Pesquisas de Satisfação");
       
-      const fileName = `pesquisas-satisfacao-${dateFilter || 'geral'}-${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+      const fileName = `pesquisas-satisfacao-${startDate || 'inicio'}-a-${endDate || 'fim'}-${format(new Date(), "yyyy-MM-dd")}.xlsx`;
       XLSX.writeFile(workbook, fileName);
       toast.success("Pesquisas exportadas com sucesso!");
     } catch (error) {
@@ -249,31 +286,69 @@ const Admin = () => {
                 </div>
               </div>
               
-              <div className="flex items-center gap-3">
-                <Input 
-                  type="date" 
-                  value={dateFilter}
-                  onChange={handleDateFilterChange}
-                  className="w-full md:w-[180px] h-10 bg-white dark:bg-zinc-950 border-border/50"
-                />
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground whitespace-nowrap">De:</span>
+                  <Input 
+                    type="date" 
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-[130px] h-9 bg-white dark:bg-zinc-950 border-border/50 text-xs px-2"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground whitespace-nowrap">Até:</span>
+                  <Input 
+                    type="date" 
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-[130px] h-9 bg-white dark:bg-zinc-950 border-border/50 text-xs px-2"
+                  />
+                </div>
                 <Button 
                   variant="outline" 
                   size="icon" 
                   onClick={exportSurveysToExcel}
                   title="Exportar para Excel"
-                  className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-colors"
+                  className="h-9 w-9 shrink-0 hover:bg-primary/10 hover:text-primary transition-colors border-border/50"
                 >
-                  <Download className="w-5 h-5" />
+                  <Download className="w-4 h-4" />
                 </Button>
               </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
+            {/* INDICADORES DE MÉDIAS */}
+            {!isLoadingSurveys && averages && (
+              <div className="bg-primary/5 border-b border-primary/10 p-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-6">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase font-bold text-primary/70 tracking-wider">Média Geral</span>
+                  <div className="flex items-center gap-1.5">
+                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    <span className="text-2xl font-black text-primary">{averages.overall}</span>
+                  </div>
+                </div>
+                {[
+                  { label: "Sabor", value: averages.sabor },
+                  { label: "Variedade", value: averages.variedade },
+                  { label: "Apres.", value: averages.apresentacao },
+                  { label: "Temp.", value: averages.temperatura },
+                  { label: "Higiene", value: averages.higiene },
+                  { label: "Atend.", value: averages.atendimento },
+                ].map((stat, i) => (
+                  <div key={i} className="flex flex-col gap-1 sm:border-l sm:pl-4">
+                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{stat.label}</span>
+                    <span className="text-xl font-extrabold text-foreground/90">{stat.value}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {isLoadingSurveys ? (
               <div className="p-12 text-center text-muted-foreground animate-pulse">Carregando pesquisas...</div>
             ) : filteredSurveys.length === 0 ? (
               <div className="p-12 text-center text-muted-foreground italic">
-                {dateFilter ? "Nenhuma pesquisa encontrada nesta data." : "Nenhuma pesquisa cadastrada."}
+                {(startDate || endDate) ? "Nenhuma pesquisa encontrada neste período." : "Nenhuma pesquisa cadastrada."}
               </div>
             ) : (
               <div className="divide-y divide-border/30 max-h-[600px] overflow-y-auto">

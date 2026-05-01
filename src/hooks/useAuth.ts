@@ -8,6 +8,7 @@ import {
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { toast } from "sonner";
+import { isEmailAllowed } from "@/lib/constants";
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -17,10 +18,10 @@ export const useAuth = () => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         // Check domain
-        if (user.email?.endsWith("@programaleiloes.com")) {
+        if (isEmailAllowed(user.email)) {
             setUser(user);
         } else {
-            toast.error("Acesso restrito ao domínio @programaleiloes.com");
+            toast.error("Acesso restrito aos domínios autorizados");
             signOut(auth);
             setUser(null);
         }
@@ -37,8 +38,8 @@ export const useAuth = () => {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
-      if (!result.user.email?.endsWith("@programaleiloes.com")) {
-          toast.error("Acesso restrito ao domínio @programaleiloes.com");
+      if (!isEmailAllowed(result.user.email)) {
+          toast.error("Acesso restrito aos domínios autorizados");
           await signOut(auth);
           return null;
       }
