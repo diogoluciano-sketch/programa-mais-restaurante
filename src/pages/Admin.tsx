@@ -364,15 +364,22 @@ const Admin = () => {
                         {s.date ? format(new Date(s.date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "N/A"}
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-muted/20 p-4 rounded-xl border">
+                    <div className="grid grid-cols-7 gap-2 bg-muted/20 p-4 rounded-xl border">
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] uppercase font-bold text-muted-foreground">Geral</span>
                         <div className="flex items-center gap-1"><Star className="w-4 h-4 text-amber-500 fill-amber-500" /><span className="text-lg font-black">{s.overallScore}</span></div>
                       </div>
-                      {Object.entries(s.ratings || {}).slice(0, 3).map(([key, val]: [string, any]) => (
-                        <div key={key} className="flex flex-col gap-1 border-l pl-4">
-                          <span className="text-[10px] uppercase font-bold text-muted-foreground truncate capitalize" title={key}>{key}</span>
-                          <span className="text-base font-bold">{val}</span>
+                      {([
+                        { key: "sabor", label: "Sabor" },
+                        { key: "variedade", label: "Variedade" },
+                        { key: "apresentacao", label: "Apres." },
+                        { key: "temperatura", label: "Temp." },
+                        { key: "higiene", label: "Higiene" },
+                        { key: "atendimento", label: "Atend." },
+                      ] as const).map(({ key, label }) => (
+                        <div key={key} className="flex flex-col gap-1 border-l pl-2">
+                          <span className="text-[10px] uppercase font-bold text-muted-foreground">{label}</span>
+                          <span className="text-base font-bold">{s.ratings?.[key] ?? "–"}</span>
                         </div>
                       ))}
                     </div>

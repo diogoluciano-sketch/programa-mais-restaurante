@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import Survey from "./pages/Survey";
+import Semana from "./pages/Semana";
+import Relatorio from "./pages/Relatorio";
 import AuthContainer from "./components/AuthContainer.tsx";
 
 import Layout from "./components/Layout";
@@ -23,7 +25,9 @@ const App = () => (
           <Layout>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/semana" element={<Semana />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/relatorio" element={<Relatorio />} />
               <Route path="/pesquisa" element={<Survey />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -1,4 +1,4 @@
-import { Home, ClipboardCheck, LayoutDashboard, ExternalLink, LogOut, Users } from "lucide-react";
+import { Home, CalendarDays, ClipboardCheck, LayoutDashboard, ExternalLink, LogOut, Users, BarChart3 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +27,11 @@ const AppSidebar = () => {
       icon: Home,
     },
     {
+      title: "Cardápios da Semana",
+      url: "/semana",
+      icon: CalendarDays,
+    },
+    {
       title: "Pesquisa de Satisfação",
       url: "/pesquisa",
       icon: ClipboardCheck,
@@ -38,7 +43,12 @@ const AppSidebar = () => {
       title: "Painel Administrativo",
       url: "/admin",
       icon: LayoutDashboard,
-    }
+    },
+    {
+      title: "Relatório de Presença",
+      url: "/relatorio",
+      icon: BarChart3,
+    },
   ];
 
   return (
