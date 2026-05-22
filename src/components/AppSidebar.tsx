@@ -1,4 +1,4 @@
-import { Home, CalendarDays, ClipboardCheck, LayoutDashboard, ExternalLink, LogOut, Users, BarChart3 } from "lucide-react";
+import { Home, CalendarDays, ClipboardCheck, LayoutDashboard, ExternalLink, LogOut, BarChart3, BookOpen, HardHat } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -49,27 +49,36 @@ const AppSidebar = () => {
       url: "/relatorio",
       icon: BarChart3,
     },
+    {
+      title: "Diário de Leilão",
+      url: "/diario-leilao",
+      icon: BookOpen,
+    },
+    {
+      title: "Prestadores de Serviço",
+      url: "/prestadores",
+      icon: HardHat,
+    },
   ];
 
   return (
     <Sidebar variant="inset" collapsible="icon">
-      <SidebarHeader className="p-4 flex flex-row items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-          <img 
-            src="https://lh3.googleusercontent.com/d/1y4DVWygWgn4i0QJs4puYzaSDxkhrSGCB" 
-            alt="Logo" 
-            className="w-5 h-5 object-contain invert brightness-0" 
-          />
-        </div>
-        <div className="flex flex-col truncate">
-          <span className="font-bold text-sm leading-tight">Programa +</span>
-          <span className="text-[10px] text-muted-foreground uppercase font-black tracking-tighter">Restaurante</span>
+      <SidebarHeader className="p-4 group-data-[collapsible=icon]:p-1 flex flex-col items-center gap-2">
+        <img
+          src="https://lh3.googleusercontent.com/d/1y4DVWygWgn4i0QJs4puYzaSDxkhrSGCB"
+          alt="Logo"
+          className="w-20 h-20 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:h-10 object-contain"
+        />
+        <div className="flex flex-col items-center text-center group-data-[collapsible=icon]:hidden">
+          <span className="font-black text-[11px] uppercase leading-tight tracking-tight whitespace-nowrap">Programa Mais Restaurante</span>
+          <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Serviço de Alimentação</span>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navegação</SidebarGroupLabel>
+          <SidebarSeparator className="mb-1" />
+          <SidebarGroupLabel className="text-center justify-center">Navegação</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -92,7 +101,8 @@ const AppSidebar = () => {
 
         {isUserAdmin(user?.email) && (
           <SidebarGroup>
-            <SidebarGroupLabel>Gestão</SidebarGroupLabel>
+            <SidebarSeparator className="mb-1" />
+            <SidebarGroupLabel className="text-center justify-center">Gestão</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {adminItems.map((item) => (
@@ -114,10 +124,9 @@ const AppSidebar = () => {
           </SidebarGroup>
         )}
 
-        <SidebarSeparator className="my-2" />
-
         <SidebarGroup>
-          <SidebarGroupLabel>Atalhos</SidebarGroupLabel>
+          <SidebarSeparator className="mb-1" />
+          <SidebarGroupLabel className="text-center justify-center">Atalhos</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>

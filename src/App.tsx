@@ -9,6 +9,8 @@ import Admin from "./pages/Admin";
 import Survey from "./pages/Survey";
 import Semana from "./pages/Semana";
 import Relatorio from "./pages/Relatorio";
+import DiarioLeilao from "./pages/DiarioLeilao";
+import Prestadores from "./pages/Prestadores";
 import AuthContainer from "./components/AuthContainer.tsx";
 
 import Layout from "./components/Layout";
@@ -28,6 +30,8 @@ const App = () => (
               <Route path="/semana" element={<Semana />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/relatorio" element={<Relatorio />} />
+              <Route path="/diario-leilao" element={<DiarioLeilao />} />
+              <Route path="/prestadores" element={<Prestadores />} />
               <Route path="/pesquisa" element={<Survey />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
