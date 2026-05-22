@@ -17,13 +17,10 @@ import {
   format,
   startOfWeek,
   addDays,
-  addWeeks,
-  subWeeks,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-  ChevronLeft,
-  ChevronRight,
+  CalendarDays,
   RefreshCw,
   Settings,
   Save,
@@ -57,6 +54,9 @@ import {
   Moon,
 } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -122,6 +122,21 @@ const REFEICOES = [
   "Ceia",
 ];
 
+const BEBIDAS = [
+  "Água Tônica",
+  "Campari",
+  "Cerveja",
+  "Coca-Cola 2L",
+  "Refrigerante Lata",
+  "Energético",
+  "Máquina de Café",
+  "Polpa",
+  "Vinho",
+  "Vodca",
+  "Whisky",
+  "Outros",
+];
+
 const REFEICOES_ICONS: Record<string, React.ElementType> = {
   "Café da manhã":   Coffee,
   "Lanche da manhã": Apple,
@@ -172,6 +187,8 @@ interface LeilaoPlanning {
   pessoasServidas: number | null;
   servicos: Record<string, ServidorTurno[]>;
   refeicoes: Record<string, RefeicaoData>;
+  bebidas: Record<string, number | null>;
+  observacoes: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -216,7 +233,7 @@ function getStudioTheme(local: string) {
   switch (n) {
     case "1": return { headerBg: "bg-red-700",    headerSub: "text-red-100",    sectionText: "text-red-700",    darkHeader: false, hex: "#b91c1c" };
     case "2": return { headerBg: "bg-blue-700",   headerSub: "text-blue-100",   sectionText: "text-blue-700",   darkHeader: false, hex: "#1d4ed8" };
-    case "3": return { headerBg: "bg-yellow-500", headerSub: "text-yellow-900", sectionText: "text-yellow-600", darkHeader: true,  hex: "#ca8a04" };
+    case "3": return { headerBg: "bg-yellow-500", headerSub: "text-white",     sectionText: "text-yellow-600", darkHeader: false, hex: "#ca8a04" };
     case "4": return { headerBg: "bg-purple-700", headerSub: "text-purple-100", sectionText: "text-purple-700", darkHeader: false, hex: "#7e22ce" };
     default:  return { headerBg: "bg-sky-400",    headerSub: "text-sky-50",     sectionText: "text-sky-600",    darkHeader: false, hex: "#0ea5e9" };
   }
@@ -254,6 +271,8 @@ const AuctionCard: React.FC<{
     pessoasServidas: null,
     servicos: {},
     refeicoes: {},
+    bebidas: {},
+    observacoes: "",
   });
   const emptyServicoForm = () => ({ prestadorId: "none", inicio: "", fim: "" });
   const [servicoForms, setServicoForms] = useState<Record<string, { prestadorId: string; inicio: string; fim: string }>>({});
@@ -350,6 +369,11 @@ const AuctionCard: React.FC<{
   table.servicos td { padding: 4px 0; border-bottom: 1px solid #f3f4f6; font-size: 11px; }
   .role-label { width: 55%; font-weight: 500; color: #374151; }
   .role-value { color: #111; }
+  .bebidas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 16px; }
+  .bebida-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 3px 0; border-bottom: 1px solid #f3f4f6; }
+  .bebida-nome { color: #374151; }
+  .bebida-qty { font-weight: bold; min-width: 24px; text-align: right; }
+  .observacoes-box { font-size: 11px; color: #374151; white-space: pre-wrap; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; padding: 8px 10px; min-height: 40px; }
   .refeicao { margin-bottom: 8px; padding: 6px 8px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; }
   .refeicao-header { display: flex; justify-content: space-between; align-items: center; }
   .refeicao-nome { font-weight: bold; font-size: 11px; }
@@ -403,6 +427,21 @@ const AuctionCard: React.FC<{
     <div class="section-title">Cardápio</div>
     ${cardapioHtml}
   </div>
+
+  <div class="section">
+    <div class="section-title">Bebidas</div>
+    <div class="bebidas-grid">
+      ${BEBIDAS.map((b) => {
+        const qty = planning.bebidas[b];
+        return `<div class="bebida-row"><span class="bebida-nome">${esc(b)}</span><span class="bebida-qty">${qty != null ? qty : "<span class='empty'>—</span>"}</span></div>`;
+      }).join("")}
+    </div>
+  </div>
+
+  ${planning.observacoes ? `<div class="section">
+    <div class="section-title">Observações</div>
+    <div class="observacoes-box">${esc(planning.observacoes)}</div>
+  </div>` : ""}
 
   <div class="stats">
     <div class="stat"><div class="lbl">Total de pessoas previstas</div><div class="val">${totalPrevisto} pessoas</div></div>
@@ -476,10 +515,15 @@ const AuctionCard: React.FC<{
     }));
   };
 
+  const [collapsed, setCollapsed] = useState(true);
+
   return (
     <div className="rounded-xl border border-border shadow-sm bg-card overflow-hidden">
       {/* Card header */}
-      <div className={`${theme.headerBg} ${theme.darkHeader ? "text-yellow-950" : "text-white"} px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2`}>
+      <div
+        className={`${theme.headerBg} ${theme.darkHeader ? "text-yellow-950" : "text-white"} px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer select-none`}
+        onClick={() => setCollapsed((c) => !c)}
+      >
         <div>
           <p className={`flex items-center gap-1 text-xs font-semibold uppercase tracking-widest ${theme.headerSub}`}>
             <MapPin className="w-3 h-3" />
@@ -489,7 +533,7 @@ const AuctionCard: React.FC<{
             {auction.name || "—"}
           </p>
         </div>
-        <div className="flex gap-2 self-end sm:self-auto">
+        <div className="flex gap-2 self-end sm:self-auto" onClick={(e) => e.stopPropagation()}>
           <Button
             size="sm"
             variant="outline"
@@ -517,6 +561,7 @@ const AuctionCard: React.FC<{
         </div>
       </div>
 
+      {!collapsed && <>
       {/* Pessoas previstas / servidas / diferença */}
       {(() => {
         const totalPrevisto =
@@ -580,18 +625,39 @@ const AuctionCard: React.FC<{
         );
       })()}
 
-      <Accordion type="multiple" defaultValue={["equipe"]} className="px-4 pb-2">
-        {/* EQUIPE */}
-        <AccordionItem value="equipe">
+      <Accordion type="multiple" defaultValue={[]} className="px-4 pb-2">
+        {/* INFORMAÇÕES BÁSICAS */}
+        <AccordionItem value="info">
           <AccordionTrigger className={`text-sm font-semibold uppercase tracking-wider ${theme.sectionText}`}>
-            Equipe
+            Identificação
           </AccordionTrigger>
           <AccordionContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm pb-2">
               <InfoRow
+                icon={CalendarDays}
+                label="DATA"
+                value={(() => {
+                  const d = parseDate(auction.date);
+                  return d ? format(d, "dd/MM/yyyy", { locale: ptBR }) : auction.date || "—";
+                })()}
+                dimmed={!auction.date}
+              />
+              <InfoRow
                 icon={Clock}
                 label="HORÁRIO"
-                value={auction.horario || "—"}
+                value={(() => {
+                  if (!auction.horario) return "—";
+                  const nextDay = parseDate(auction.date);
+                  const dateLabel = nextDay
+                    ? (() => { nextDay.setDate(nextDay.getDate() + 1); return format(nextDay, "dd/MM/yyyy"); })()
+                    : "dia seguinte";
+                  return (
+                    <span>
+                      {auction.horario} - 01:00{" "}
+                      <span className="text-muted-foreground italic text-xs">({dateLabel})</span>
+                    </span>
+                  );
+                })()}
                 dimmed={!auction.horario}
               />
               <InfoRow icon={Wifi} label="TRANSMISSÃO" value="—" dimmed />
@@ -602,9 +668,7 @@ const AuctionCard: React.FC<{
                   splitNames(auction.promotor).length > 0 ? (
                     <div className="flex flex-wrap gap-1">
                       {splitNames(auction.promotor).map((n) => (
-                        <Badge key={n} variant="secondary" className="text-xs">
-                          {n}
-                        </Badge>
+                        <Badge key={n} variant="secondary" className="text-xs">{n}</Badge>
                       ))}
                     </div>
                   ) : (
@@ -619,9 +683,7 @@ const AuctionCard: React.FC<{
                   splitNames(auction.leiloeiro).length > 0 ? (
                     <div className="flex flex-wrap gap-1">
                       {splitNames(auction.leiloeiro).map((n) => (
-                        <Badge key={n} variant="secondary" className="text-xs">
-                          {n}
-                        </Badge>
+                        <Badge key={n} variant="secondary" className="text-xs">{n}</Badge>
                       ))}
                     </div>
                   ) : (
@@ -636,9 +698,7 @@ const AuctionCard: React.FC<{
                   splitNames(auction.assessorias).length > 0 ? (
                     <div className="flex flex-wrap gap-1">
                       {splitNames(auction.assessorias).map((n) => (
-                        <Badge key={n} variant="secondary" className="text-xs">
-                          {n}
-                        </Badge>
+                        <Badge key={n} variant="secondary" className="text-xs">{n}</Badge>
                       ))}
                     </div>
                   ) : (
@@ -646,10 +706,20 @@ const AuctionCard: React.FC<{
                   )
                 }
               />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* EQUIPE */}
+        <AccordionItem value="equipe">
+          <AccordionTrigger className={`text-sm font-semibold uppercase tracking-wider ${theme.sectionText}`}>
+            Equipe
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm pb-2">
 
               {/* COORDENADOR */}
               <div className="sm:col-span-2">
-                <Separator className="my-2" />
                 <InfoRow
                   icon={User}
                   label="COORDENADOR"
@@ -742,7 +812,11 @@ const AuctionCard: React.FC<{
                     <div className="flex items-center gap-2 flex-wrap">
                       <Select
                         value={form.prestadorId}
-                        onValueChange={(v) => patchServicoForm(role.key, { prestadorId: v })}
+                        onValueChange={(v) => patchServicoForm(role.key, {
+                          prestadorId: v,
+                          inicio: auction.horario || "",
+                          fim: "01:00",
+                        })}
                       >
                         <SelectTrigger className="h-7 text-xs w-44">
                           <SelectValue placeholder="Prestador..." />
@@ -861,7 +935,60 @@ const AuctionCard: React.FC<{
             </div>
           </AccordionContent>
         </AccordionItem>
+
+        {/* BEBIDAS */}
+        <AccordionItem value="bebidas">
+          <AccordionTrigger className={`text-sm font-semibold uppercase tracking-wider ${theme.sectionText}`}>
+            Bebidas
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 pb-2">
+              {BEBIDAS.map((bebida) => (
+                <div key={bebida} className="flex items-center gap-2">
+                  <span className="text-sm flex-1 truncate">{bebida}</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={planning.bebidas[bebida] ?? ""}
+                    onChange={(e) =>
+                      setPlanning((prev) => ({
+                        ...prev,
+                        bebidas: {
+                          ...prev.bebidas,
+                          [bebida]: e.target.value === "" ? null : Number(e.target.value),
+                        },
+                      }))
+                    }
+                    placeholder="—"
+                    className="w-16 h-7 text-sm text-center"
+                  />
+                </div>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* OBSERVAÇÕES */}
+        <AccordionItem value="observacoes">
+          <AccordionTrigger className={`text-sm font-semibold uppercase tracking-wider ${theme.sectionText}`}>
+            Observações
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="pb-2">
+              <Textarea
+                value={planning.observacoes}
+                onChange={(e) =>
+                  setPlanning((prev) => ({ ...prev, observacoes: e.target.value }))
+                }
+                placeholder="Anotações gerais sobre o leilão..."
+                className="min-h-[100px] resize-y text-sm"
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
       </Accordion>
+      </>}
     </div>
   );
 };
@@ -875,16 +1002,14 @@ const DiarioLeilao = () => {
   const [configForm, setConfigForm] = useState<Config>(getConfig);
   const [configOpen, setConfigOpen] = useState(false);
   const [sheetsToken, setSheetsToken] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"week" | "day">("week");
-  const [weekStart, setWeekStart] = useState(() =>
-    startOfWeek(new Date(), { weekStartsOn: 1 })
-  );
-  const [selectedDay, setSelectedDay] = useState(() => {
-    const t = new Date();
-    return new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  const [selectedDates, setSelectedDates] = useState<Date[]>(() => {
+    const nextMonday = startOfWeek(addDays(new Date(), 7), { weekStartsOn: 1 });
+    return Array.from({ length: 7 }, (_, i) => addDays(nextMonday, i));
   });
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [auctions, setAuctions] = useState<AuctionRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [studioFilter, setStudioFilter] = useState<string | null>(null);
 
   if (loading) return null;
   if (!isUserAdmin(user?.email)) {
@@ -892,13 +1017,9 @@ const DiarioLeilao = () => {
     return null;
   }
 
-  const filterStart = viewMode === "week" ? weekStart : selectedDay;
-  const filterEnd   = viewMode === "week" ? addDays(weekStart, 6) : selectedDay;
-
-  const periodLabel =
-    viewMode === "week"
-      ? `${format(weekStart, "d")} a ${format(filterEnd, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}`
-      : format(selectedDay, "EEEE, d 'de' MMMM", { locale: ptBR });
+  const selectedDateKeys = new Set(
+    selectedDates.map((d) => format(d, "dd/MM/yyyy"))
+  );
 
   const handleLoad = async () => {
     setIsLoading(true);
@@ -985,8 +1106,8 @@ const DiarioLeilao = () => {
         // Skip rows without a parseable date
         if (!d) return;
 
-        // Filter to selected period
-        if (d < filterStart || d > filterEnd) return;
+        // Filter to selected dates
+        if (!selectedDateKeys.has(format(d, "dd/MM/yyyy"))) return;
 
         rows.push({
           rowNumber: idx + 3,
@@ -1004,7 +1125,7 @@ const DiarioLeilao = () => {
 
       setAuctions(rows);
       if (rows.length === 0)
-        toast.warning(viewMode === "week" ? "Nenhum leilão encontrado para esta semana." : "Nenhum leilão encontrado para este dia.");
+        toast.warning("Nenhum leilão encontrado para as datas selecionadas.");
       else toast.success(`${rows.length} leilão(ões) carregado(s).`);
     } catch (err: any) {
       if (
@@ -1018,9 +1139,14 @@ const DiarioLeilao = () => {
     }
   };
 
-  // Group by date string
+  // Filter by studio then group by date
+  const filteredAuctions = studioFilter == null ? auctions : auctions.filter((a) => {
+    const n = a.local.match(/est[uú]di[oa]\s*0*(\d)/i)?.[1] ?? "none";
+    return n === studioFilter;
+  });
+
   const groupedByDay: Record<string, AuctionRow[]> = {};
-  auctions.forEach((a) => {
+  filteredAuctions.forEach((a) => {
     const key = a.date || "Sem data";
     if (!groupedByDay[key]) groupedByDay[key] = [];
     groupedByDay[key].push(a);
@@ -1044,57 +1170,28 @@ const DiarioLeilao = () => {
 
         <div className="flex items-center gap-2 flex-wrap">
           {/* Mode toggle */}
-          <div className="flex rounded-md border border-border overflow-hidden">
-            <button
-              className={`px-3 h-9 text-xs font-semibold transition-colors ${
-                viewMode === "week"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background text-muted-foreground hover:bg-muted"
-              }`}
-              onClick={() => { setViewMode("week"); setAuctions([]); }}
-            >
-              Semana
-            </button>
-            <button
-              className={`px-3 h-9 text-xs font-semibold border-l border-border transition-colors ${
-                viewMode === "day"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background text-muted-foreground hover:bg-muted"
-              }`}
-              onClick={() => { setViewMode("day"); setAuctions([]); }}
-            >
-              Dia
-            </button>
-          </div>
-
-          {/* Period navigation */}
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9"
-            onClick={() => {
-              if (viewMode === "week") setWeekStart((w) => subWeeks(w, 1));
-              else setSelectedDay((d) => addDays(d, -1));
-              setAuctions([]);
-            }}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <span className="text-sm font-medium whitespace-nowrap px-1 capitalize">
-            {periodLabel}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9"
-            onClick={() => {
-              if (viewMode === "week") setWeekStart((w) => addWeeks(w, 1));
-              else setSelectedDay((d) => addDays(d, 1));
-              setAuctions([]);
-            }}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+          {/* Date picker */}
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-9 gap-2 text-sm font-normal">
+                <CalendarIcon className="w-4 h-4" />
+                {selectedDates.length === 0
+                  ? "Selecionar datas"
+                  : selectedDates.length === 1
+                  ? format(selectedDates[0], "dd/MM/yyyy")
+                  : `${selectedDates.length} datas selecionadas`}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="multiple"
+                selected={selectedDates}
+                onSelect={(dates) => { setSelectedDates(dates ?? []); setAuctions([]); }}
+                locale={ptBR}
+                weekStartsOn={1}
+              />
+            </PopoverContent>
+          </Popover>
 
           <Button
             onClick={handleLoad}
@@ -1204,26 +1301,32 @@ const DiarioLeilao = () => {
         </div>
       </div>
 
-      {/* Studio color legend */}
+      {/* Studio color legend / filter */}
       <div className="flex flex-wrap gap-2">
         {[
-          { label: "Estúdio 01", bg: "bg-red-700",    text: "text-white" },
-          { label: "Estúdio 02", bg: "bg-blue-700",   text: "text-white" },
-          { label: "Estúdio 03", bg: "bg-yellow-500", text: "text-yellow-950" },
-          { label: "Estúdio 04", bg: "bg-purple-700", text: "text-white" },
-          { label: "Sem estúdio", bg: "bg-sky-400",   text: "text-white" },
-        ].map(({ label, bg, text }) => (
-          <span
-            key={label}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${bg} ${text}`}
-          >
-            {label}
-          </span>
-        ))}
+          { label: "Estúdio 01", bg: "bg-red-700",    text: "text-white",        key: "1"    },
+          { label: "Estúdio 02", bg: "bg-blue-700",   text: "text-white",        key: "2"    },
+          { label: "Estúdio 03", bg: "bg-yellow-500", text: "text-white",        key: "3"    },
+          { label: "Estúdio 04", bg: "bg-purple-700", text: "text-white",        key: "4"    },
+          { label: "Sem estúdio", bg: "bg-sky-400",   text: "text-white",        key: "none" },
+        ].map(({ label, bg, text, key }) => {
+          const active = studioFilter === key;
+          return (
+            <button
+              key={label}
+              onClick={() => setStudioFilter(active ? null : key)}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all cursor-pointer ${bg} ${text} ${
+                active ? "ring-2 ring-offset-2 ring-foreground scale-105" : "opacity-70 hover:opacity-100"
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Auction list grouped by day */}
-      {auctions.length > 0 && (
+      {filteredAuctions.length > 0 && (
         <div className="space-y-8">
           {Object.entries(groupedByDay).map(([day, dayAuctions]) => {
             const d = parseDate(day);
@@ -1254,15 +1357,23 @@ const DiarioLeilao = () => {
       )}
 
       {/* Empty state */}
-      {auctions.length === 0 && !isLoading && (
+      {filteredAuctions.length === 0 && !isLoading && (
         <div className="rounded-lg border border-dashed border-border p-12 text-center space-y-2">
-          <p className="font-medium text-muted-foreground">
-            Selecione uma semana e clique em Carregar
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Use o botão <Settings className="inline w-3.5 h-3.5 mx-0.5" /> para
-            configurar o nome da aba e das colunas da planilha.
-          </p>
+          {auctions.length > 0 && studioFilter != null ? (
+            <p className="font-medium text-muted-foreground">
+              Nenhum leilão encontrado para o filtro selecionado.
+            </p>
+          ) : (
+            <>
+              <p className="font-medium text-muted-foreground">
+                Selecione uma semana e clique em Carregar
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Use o botão <Settings className="inline w-3.5 h-3.5 mx-0.5" /> para
+                configurar o nome da aba e das colunas da planilha.
+              </p>
+            </>
+          )}
         </div>
       )}
     </div>
